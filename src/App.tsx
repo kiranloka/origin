@@ -256,7 +256,23 @@ function MermaidDiagram({ code, caption, style }: { code: string; caption: strin
   );
 }
 
+import { WaitlistModal } from "./components/WaitlistModal";
+import logo from "./logo.svg";
+
 export function App() {
+  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    const joined = localStorage.getItem("origin-waitlist-joined") === "true";
+    if (joined) setHasJoinedWaitlist(true);
+  }, []);
+
+  const handleJoinSuccess = () => {
+    localStorage.setItem("origin-waitlist-joined", "true");
+    setHasJoinedWaitlist(true);
+  };
+
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
@@ -275,8 +291,11 @@ export function App() {
   return (
     <main className="page-shell">
       <article className="manifesto">
+        <div className="logo-container reveal" style={{ "--stagger": "0" } as CSSProperties}>
+          <img src={logo} alt="Origin Logo" className="page-logo" />
+        </div>
         {MANIFESTO_BLOCKS.map((block, blockIndex) => {
-          const style = { "--stagger": String(blockIndex) } as CSSProperties;
+          const style = { "--stagger": String(blockIndex + 1) } as CSSProperties;
           if (block.kind === "hero") {
             return (
               <header className="manifesto-hero reveal" style={style} key={`hero-${blockIndex}`}>
@@ -333,13 +352,29 @@ export function App() {
           }
           return (
             <section className="cta reveal" style={style} key={`cta-${blockIndex}`} id="join">
-              <PretextLines className="cta-title" text={block.title} {...TEXT_PRESETS.ctaTitle} />
-              <PretextLines className="cta-body" text={block.text} {...TEXT_PRESETS.ctaBody} />
-              <a href="#join">{block.action}</a>
+              <PretextLines className="cta-title" text={hasJoinedWaitlist ? "You're in!" : block.title} {...TEXT_PRESETS.ctaTitle} />
+              <PretextLines className="cta-body" text={hasJoinedWaitlist ? "Thank you for joining the Origin waitlist. We'll reach out as soon as early access is available." : block.text} {...TEXT_PRESETS.ctaBody} />
+              {hasJoinedWaitlist ? (
+                <div className="cta-joined">Waitlist Status: Confirmed</div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(true)}
+                  className="cta-button"
+                >
+                  {block.action}
+                </button>
+              )}
             </section>
           );
         })}
       </article>
+
+      <WaitlistModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onSuccess={handleJoinSuccess}
+      />
     </main>
   );
 }

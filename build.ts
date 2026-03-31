@@ -140,6 +140,19 @@ const entrypoints = [...new Bun.Glob("**.html").scanSync("src")]
   .filter(dir => !dir.includes("node_modules"));
 console.log(`📄 Found ${entrypoints.length} HTML ${entrypoints.length === 1 ? "file" : "files"} to process\n`);
 
+// Inline VITE_ environment variables for the browser
+const envDefine: Record<string, string> = {
+  "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
+  "import.meta.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
+};
+
+for (const key in process.env) {
+  if (key.startsWith("VITE_")) {
+    envDefine[`import.meta.env.${key}`] = JSON.stringify(process.env[key]);
+    envDefine[`process.env.${key}`] = JSON.stringify(process.env[key]);
+  }
+}
+
 // Build all the HTML files
 const result = await build({
   entrypoints,
@@ -148,9 +161,7 @@ const result = await build({
   minify: true,
   target: "browser",
   sourcemap: "linked",
-  define: {
-    "process.env.NODE_ENV": JSON.stringify("production"),
-  },
+  define: envDefine,
   ...cliConfig, // Merge in any CLI-provided options
 });
 
