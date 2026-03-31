@@ -1,8 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Bun automatically loads .env into process.env
-const supabaseUrl = typeof process !== "undefined" ? process.env.VITE_SUPABASE_URL : undefined;
-const supabaseAnonKey = typeof process !== "undefined" ? process.env.VITE_SUPABASE_ANON_KEY : undefined;
+// Access environment variables via import.meta.env
+// The build script will bake these into the client bundle
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Supabase credentials missing in environment variables");
